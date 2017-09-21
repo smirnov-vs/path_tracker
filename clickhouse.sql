@@ -1,12 +1,14 @@
 CREATE DATABASE tracking;
 
+USE tracking;
+
 CREATE TABLE logs
 (
     id UInt64,
     time DateTime DEFAULT now(),
-    latitude Float32,
-    longitude Float32,
-    accuracy Float32,
-    speed Float32,
+    latitude Float64,
+    longitude Float64,
+    accuracy Float64,
+    speed Float64,
     EventDate Date DEFAULT now()
 ) ENGINE = MergeTree(EventDate, (id, time), 8192);

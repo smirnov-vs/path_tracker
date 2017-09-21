@@ -29,10 +29,10 @@ void Server::logWorker(Client& client) {
         Block block;
         auto idColumn = std::make_shared<ColumnUInt64>();
         auto timeColumn = std::make_shared<ColumnDateTime>();
-        auto latitudeColumn = std::make_shared<ColumnFloat32>();
-        auto longitudeColumn = std::make_shared<ColumnFloat32>();
-        auto accuracyColumn = std::make_shared<ColumnFloat32>();
-        auto speedColumn = std::make_shared<ColumnFloat32>();
+        auto latitudeColumn = std::make_shared<ColumnFloat64>();
+        auto longitudeColumn = std::make_shared<ColumnFloat64>();
+        auto accuracyColumn = std::make_shared<ColumnFloat64>();
+        auto speedColumn = std::make_shared<ColumnFloat64>();
 
         while (!localLogs.empty()) {
             try {
@@ -63,19 +63,19 @@ void Server::logWorker(Client& client) {
         block.AppendColumn("speed", speedColumn);
 
         if (block.GetRowCount() > 0)
-            client.Insert("logs", block);
+            client.Insert("tracking.logs", block);
     }
 }
 
 int Server::main(const std::vector<std::string>& args) {
     Client client(ClientOptions().SetHost("localhost"));
-    client.Execute("USE tracking");
 
     isRunning = true;
     std::thread worker(&Server::logWorker, this, std::ref(client));
 
-    Factory::Ptr factory = new Factory(logs, logsMutex);
+    Factory::Ptr factory = new Factory();
     factory->route("^/log/?$", Factory::getFactory<LogHandler>(std::ref(logs), std::ref(logsMutex)));
+    factory->route("^/track/?.*", Factory::getFactory<TrackHandler>());
 
     Poco::Net::ServerSocket socket(Poco::Net::SocketAddress("127.0.0.1", 8000));
     Poco::Net::HTTPServerParams::Ptr parameters = new Poco::Net::HTTPServerParams();

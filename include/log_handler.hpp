@@ -25,7 +25,7 @@ class LogHandler final : public Poco::Net::HTTPRequestHandler {
     void handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) override;
 
 public:
-    LogHandler(logs_t& client, std::mutex& logsMutex);
+    LogHandler(logs_t& logs, std::mutex& logsMutex);
 };
 
 #endif //PATH_TRACKING_LOG_HANDLER_H

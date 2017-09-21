@@ -5,8 +5,6 @@
 
 #include <Poco/Util/ServerApplication.h>
 
-#include <clickhouse/client.h>
-
 #include <atomic>
 #include <condition_variable>
 

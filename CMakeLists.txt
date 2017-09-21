@@ -4,13 +4,22 @@ project(path_tracking)
 add_compile_options("-std=c++17")
 
 add_subdirectory(clickhouse-cpp)
-include_directories(clickhouse-cpp)
 
+set(POCO_PREFIX      "/usr/local")
+set(POCO_INCLUDE_DIR "${POCO_PREFIX}/include")
+set(POCO_LIB_DIR     "${POCO_PREFIX}/lib")
+set(POCO_LIBS
+        ${POCO_LIB_DIR}/libPocoUtil.so
+        ${POCO_LIB_DIR}/libPocoNet.so
+        ${POCO_LIB_DIR}/libPocoFoundation.so
+        pthread)
+
+
+include_directories(clickhouse-cpp ${POCO_INCLUDE_DIR})
 include_directories(include)
 
 aux_source_directory(src SRC)
 add_executable(${PROJECT_NAME} ${SRC})
 
-target_link_libraries(${PROJECT_NAME} pthread
-        PocoNet PocoFoundation PocoUtil
+target_link_libraries(${PROJECT_NAME} ${POCO_LIBS}
         clickhouse-cpp-lib cityhash-lib lz4-lib)
