@@ -69,8 +69,8 @@ int Server::main(const std::vector<std::string>& args) {
     std::thread worker(&Server::logWorker, this, std::ref(client));
 
     Poco::Net::HTTPServerParams::Ptr parameters = new Poco::Net::HTTPServerParams();
-    parameters->setTimeout(10000);
-    parameters->setMaxQueued(5000);
+    parameters->setTimeout(Poco::Timespan(1, 0));
+    parameters->setMaxQueued(1024);
     parameters->setMaxThreads(8);
 
     Poco::Net::ServerSocket socket(Poco::Net::SocketAddress("0.0.0.0", 8000));
