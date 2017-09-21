@@ -5,7 +5,7 @@ Poco::Net::HTTPRequestHandler* Factory::createRequestHandler(const Poco::Net::HT
         return nullptr;
 
     if (request.getURI() == "/log")
-        return new handlers::Log(logs, logsMutex);
+        return new LogHandler(logs, logsMutex);
 
     return nullptr;
 }

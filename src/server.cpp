@@ -1,60 +1,14 @@
 #include "server.hpp"
+#include "json.hpp"
 
 #include <Poco/Net/HTTPServer.h>
 #include <Poco/Net/ServerSocketImpl.h>
 
-#include "json.hpp"
+#include <thread>
 
 using namespace clickhouse;
 using namespace std::chrono_literals;
 using Json = nlohmann::json;
-
-struct ServerSocketImpl final : public Poco::Net::ServerSocketImpl
-{
-    using Poco::Net::SocketImpl::init;
-};
-
-class Socket final : public Poco::Net::Socket
-{
-public:
-    Socket(const std::string& address)
-            : Poco::Net::Socket(new ServerSocketImpl())
-    {
-        const Poco::Net::SocketAddress socket_address(address);
-        auto socket = (ServerSocketImpl*)impl();
-        socket->init(socket_address.af());
-        socket->setReuseAddress(true);
-        socket->setReusePort(false);
-        socket->bind(socket_address, false);
-        socket->listen();
-    }
-};
-
-int Server::main(const std::vector<std::string>& args) {
-    Client client(ClientOptions().SetHost("localhost"));
-    client.Execute("USE tracking");
-
-    isRunning = true;
-    std::thread worker(&Server::logWorker, this, std::ref(client));
-
-    Poco::Net::HTTPServerParams::Ptr parameters = new Poco::Net::HTTPServerParams();
-    parameters->setTimeout(10000);
-    parameters->setMaxQueued(5000);
-    parameters->setMaxThreads(8);
-
-    const Poco::Net::ServerSocket socket(Socket("0.0.0.0:8000"));
-    Poco::Net::HTTPServer server(new Factory(logs, logsMutex), socket, parameters);
-
-    server.start();
-    waitForTerminationRequest();
-    server.stop();
-
-    isRunning = false;
-    workerCv.notify_one();
-    worker.join();
-
-    return 0;
-}
 
 void Server::logWorker(Client& client) {
     std::mutex timerMutex;
@@ -106,3 +60,33 @@ void Server::logWorker(Client& client) {
         client.Insert("logs", block);
     }
 }
+
+int Server::main(const std::vector<std::string>& args) {
+    Client client(ClientOptions().SetHost("localhost"));
+    client.Execute("USE tracking");
+
+    isRunning = true;
+    std::thread worker(&Server::logWorker, this, std::ref(client));
+
+    Poco::Net::HTTPServerParams::Ptr parameters = new Poco::Net::HTTPServerParams();
+    parameters->setTimeout(10000);
+    parameters->setMaxQueued(5000);
+    parameters->setMaxThreads(8);
+
+    Poco::Net::ServerSocket socket(Poco::Net::SocketAddress("0.0.0.0", 8000));
+    socket.setReuseAddress(true);
+
+    Poco::Net::HTTPServer server(new Factory(logs, logsMutex), socket, parameters);
+
+    server.start();
+    waitForTerminationRequest();
+    server.stop();
+
+    isRunning = false;
+    workerCv.notify_one();
+    worker.join();
+
+    return 0;
+}
+
+POCO_SERVER_MAIN(Server)

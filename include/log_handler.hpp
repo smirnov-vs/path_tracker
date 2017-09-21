@@ -17,19 +17,15 @@ struct Log {
 
 typedef std::queue<Log> logs_t;
 
-namespace handlers {
+class LogHandler final : public Poco::Net::HTTPRequestHandler {
 
-    class Log final : public Poco::Net::HTTPRequestHandler {
+    logs_t& logs;
+    std::mutex& logsMutex;
 
-        logs_t& logs;
-        std::mutex& logsMutex;
+    void handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) override;
 
-        void handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) override;
-
-    public:
-        Log(logs_t& client, std::mutex& logsMutex);
-    };
-
-}
+public:
+    LogHandler(logs_t& client, std::mutex& logsMutex);
+};
 
 #endif //PATH_TRACKING_LOG_HANDLER_H

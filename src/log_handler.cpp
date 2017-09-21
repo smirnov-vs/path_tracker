@@ -8,7 +8,7 @@ inline std::string readAll(std::istream& stream) {
     return std::string(std::istream_iterator<char>(stream), std::istream_iterator<char>());
 }
 
-void handlers::Log::handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) {
+void LogHandler::handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) {
     {
         std::lock_guard<std::mutex> lock(logsMutex);
         logs.emplace(readAll(request.stream()), time(nullptr));
@@ -17,7 +17,5 @@ void handlers::Log::handleRequest(Poco::Net::HTTPServerRequest& request, Poco::N
     response.send().flush();
 }
 
-handlers::Log::Log(logs_t& logs, std::mutex& logsMutex)
-        : logs(logs), logsMutex(logsMutex) {
-
-}
+LogHandler::LogHandler(logs_t& logs, std::mutex& logsMutex)
+        : logs(logs), logsMutex(logsMutex) {}

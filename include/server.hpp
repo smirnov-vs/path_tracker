@@ -1,14 +1,14 @@
 #ifndef PATH_TRACKING_SERVER_H
 #define PATH_TRACKING_SERVER_H
 
+#include "factory.hpp"
+
 #include <Poco/Util/ServerApplication.h>
 
-#include <thread>
+#include <clickhouse/client.h>
+
 #include <atomic>
 #include <condition_variable>
-
-#include <clickhouse/client.h>
-#include "factory.hpp"
 
 class Server final : public Poco::Util::ServerApplication {
 

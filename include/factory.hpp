@@ -1,8 +1,9 @@
 #ifndef PATH_TRACKING_FACTORY_H
 #define PATH_TRACKING_FACTORY_H
 
-#include <Poco/Net/HTTPRequestHandlerFactory.h>
 #include "log_handler.hpp"
+
+#include <Poco/Net/HTTPRequestHandlerFactory.h>
 
 class Factory final : public Poco::Net::HTTPRequestHandlerFactory {
 
