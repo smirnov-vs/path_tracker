@@ -73,7 +73,7 @@ int Server::main(const std::vector<std::string>& args) {
     parameters->setMaxQueued(1024);
     parameters->setMaxThreads(8);
 
-    Poco::Net::ServerSocket socket(Poco::Net::SocketAddress("0.0.0.0", 8000));
+    Poco::Net::ServerSocket socket(Poco::Net::SocketAddress("127.0.0.1", 8000));
     socket.setReuseAddress(true);
 
     Poco::Net::HTTPServer server(new Factory(logs, logsMutex), socket, parameters);
