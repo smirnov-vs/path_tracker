@@ -20,44 +20,50 @@ void Server::logWorker(Client& client) {
         logs_t localLogs;
         {
             std::lock_guard<std::mutex> lock(logsMutex);
-            while (!logs.empty()) {
-                localLogs.push(logs.front());
-                logs.pop();
-            }
+            std::swap(logs, localLogs);
         }
 
         if (localLogs.empty())
             continue;
 
         Block block;
-        auto id = std::make_shared<ColumnUInt64>();
-        auto time = std::make_shared<ColumnDateTime>();
-        auto latitude = std::make_shared<ColumnFloat32>();
-        auto longitude = std::make_shared<ColumnFloat32>();
-        auto accuracy = std::make_shared<ColumnFloat32>();
-        auto speed = std::make_shared<ColumnFloat32>();
+        auto idColumn = std::make_shared<ColumnUInt64>();
+        auto timeColumn = std::make_shared<ColumnDateTime>();
+        auto latitudeColumn = std::make_shared<ColumnFloat32>();
+        auto longitudeColumn = std::make_shared<ColumnFloat32>();
+        auto accuracyColumn = std::make_shared<ColumnFloat32>();
+        auto speedColumn = std::make_shared<ColumnFloat32>();
 
         while (!localLogs.empty()) {
-            Log log = std::move(localLogs.front());
-            Json json = Json::parse(log.json);
-            localLogs.pop();
+            try {
+                Log log = std::move(localLogs.front());
+                localLogs.pop();
 
-            id->Append((uint64_t)json["id"]);
-            time->Append(log.time);
-            latitude->Append((float)json["latitude"]);
-            longitude->Append((float)json["longitude"]);
-            accuracy->Append((float)json["accuracy"]);
-            speed->Append((float)json["speed"]);
+                Json json = Json::parse(log.json);
+                uint64_t id = json["id"];
+                float latitude = json["latitude"];
+                float longitude = json["longitude"];
+                float accuracy = json["accuracy"];
+                float speed = json["speed"];
+
+                idColumn->Append(id);
+                timeColumn->Append(log.time);
+                latitudeColumn->Append(latitude);
+                longitudeColumn->Append(longitude);
+                accuracyColumn->Append(accuracy);
+                speedColumn->Append(speed);
+            } catch (std::exception&) {}
         }
 
-        block.AppendColumn("id", id);
-        block.AppendColumn("time", time);
-        block.AppendColumn("latitude", latitude);
-        block.AppendColumn("longitude", longitude);
-        block.AppendColumn("accuracy", accuracy);
-        block.AppendColumn("speed", speed);
+        block.AppendColumn("id", idColumn);
+        block.AppendColumn("time", timeColumn);
+        block.AppendColumn("latitude", latitudeColumn);
+        block.AppendColumn("longitude", longitudeColumn);
+        block.AppendColumn("accuracy", accuracyColumn);
+        block.AppendColumn("speed", speedColumn);
 
-        client.Insert("logs", block);
+        if (block.GetRowCount() > 0)
+            client.Insert("logs", block);
     }
 }
 
@@ -74,7 +80,6 @@ int Server::main(const std::vector<std::string>& args) {
     parameters->setMaxThreads(8);
 
     Poco::Net::ServerSocket socket(Poco::Net::SocketAddress("127.0.0.1", 8000));
-    socket.setReuseAddress(true);
 
     Factory::Ptr factory = new Factory(logs, logsMutex);
     factory->route("^/log/?$", Factory::getFactory<LogHandler>(std::ref(logs), std::ref(logsMutex)));

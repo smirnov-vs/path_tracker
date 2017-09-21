@@ -13,8 +13,12 @@ void LogHandler::handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net:
         response.setStatus(Poco::Net::HTTPServerResponse::HTTP_NOT_IMPLEMENTED);
         response.setReason("Not Implemented");
     } else {
-        std::lock_guard<std::mutex> lock(logsMutex);
-        logs.emplace(readAll(request.stream()), time(nullptr));
+        const auto json = readAll(request.stream());
+        const auto now = time(nullptr);
+        {
+            std::lock_guard<std::mutex> lock(logsMutex);
+            logs.emplace(std::move(json), now);
+        }
     }
 
     response.send();
