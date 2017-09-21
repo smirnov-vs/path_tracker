@@ -1,9 +1,7 @@
 #include "factory.hpp"
 
-template <class T, class ...Args>
-inline auto getFactory(Args&&... args ) {
-    return [=] { return new T(std::move(args)...); };
-};
+Factory::Factory(logs_t& logs, std::mutex& logsMutex)
+        : logs(logs), logsMutex(logsMutex) {}
 
 Poco::Net::HTTPRequestHandler* Factory::createRequestHandler(const Poco::Net::HTTPServerRequest& request) {
     if (request.getMethod() != Poco::Net::HTTPRequest::HTTP_POST)
@@ -17,7 +15,6 @@ Poco::Net::HTTPRequestHandler* Factory::createRequestHandler(const Poco::Net::HT
     return nullptr;
 }
 
-Factory::Factory(logs_t& logs, std::mutex& logsMutex)
-        : logs(logs), logsMutex(logsMutex) {
-    routes.emplace_back("^/log/?$", getFactory<LogHandler>(std::ref(logs), std::ref(logsMutex)));
+void Factory::route(const std::string& url, const Factory::handlerFactory& handlerFactory) {
+    routes.emplace_back(url, handlerFactory);
 }

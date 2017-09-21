@@ -76,7 +76,10 @@ int Server::main(const std::vector<std::string>& args) {
     Poco::Net::ServerSocket socket(Poco::Net::SocketAddress("127.0.0.1", 8000));
     socket.setReuseAddress(true);
 
-    Poco::Net::HTTPServer server(new Factory(logs, logsMutex), socket, parameters);
+    Factory::Ptr factory = new Factory(logs, logsMutex);
+    factory->route("^/log/?$", Factory::getFactory<LogHandler>(std::ref(logs), std::ref(logsMutex)));
+
+    Poco::Net::HTTPServer server(factory, socket, parameters);
 
     server.start();
     waitForTerminationRequest();

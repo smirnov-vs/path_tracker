@@ -1,12 +1,12 @@
 #include "log_handler.hpp"
 #include "json.hpp"
 
-Log::Log(const std::string& json, time_t time)
-        : json(json), time(time) {}
-
 inline std::string readAll(std::istream& stream) {
     return std::string(std::istream_iterator<char>(stream), std::istream_iterator<char>());
 }
+
+Log::Log(const std::string& json, time_t time)
+        : json(json), time(time) {}
 
 void LogHandler::handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) {
     {

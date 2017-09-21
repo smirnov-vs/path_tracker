@@ -17,6 +17,14 @@ class Factory final : public Poco::Net::HTTPRequestHandlerFactory {
     Poco::Net::HTTPRequestHandler* createRequestHandler(const Poco::Net::HTTPServerRequest& request) override;
 
 public:
+    typedef Poco::SharedPtr<Factory> Ptr;
+
+    template <class T, class ...Args>
+    static auto getFactory(Args&&... args ) {
+        return [=] { return new T(std::move(args)...); };
+    };
+
+    void route(const std::string& url, const handlerFactory& handlerFactory);
     Factory(logs_t& client, std::mutex& logsMutex);
 };
 
