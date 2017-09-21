@@ -23,10 +23,12 @@ ymaps.ready(() => {
             points.push(point);
         });
 
-        const polyline = new ymaps.Polyline(points);
-        map.geoObjects.add(myCollection);
-        map.geoObjects.add(polyline);
-        map.setBounds(polyline.geometry.getBounds());
+        if (points.length > 0) {
+            const polyline = new ymaps.Polyline(points);
+            map.geoObjects.add(myCollection);
+            map.geoObjects.add(polyline);
+            map.setBounds(polyline.geometry.getBounds());
+        }
     }).fail(() => {
         Materialize.toast('Произошла ошибка при загрузке данных', 10000, 'rounded');
     });
