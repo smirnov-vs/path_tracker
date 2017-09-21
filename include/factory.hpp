@@ -5,8 +5,12 @@
 
 #include <Poco/Net/HTTPRequestHandlerFactory.h>
 
-class Factory final : public Poco::Net::HTTPRequestHandlerFactory {
+#include <regex>
 
+class Factory final : public Poco::Net::HTTPRequestHandlerFactory {
+    typedef std::function<Poco::Net::HTTPRequestHandler*()> handlerFactory;
+
+    std::vector<std::pair<std::regex, handlerFactory>> routes;
     logs_t& logs;
     std::mutex& logsMutex;
 
