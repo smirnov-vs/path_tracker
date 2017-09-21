@@ -4,9 +4,6 @@ Factory::Factory(logs_t& logs, std::mutex& logsMutex)
         : logs(logs), logsMutex(logsMutex) {}
 
 Poco::Net::HTTPRequestHandler* Factory::createRequestHandler(const Poco::Net::HTTPServerRequest& request) {
-    if (request.getMethod() != Poco::Net::HTTPRequest::HTTP_POST)
-        return nullptr;
-
     for (auto&& [regex, handler] : routes) {
         if (std::regex_match(request.getURI(), regex))
             return handler();
