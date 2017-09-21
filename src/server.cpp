@@ -74,15 +74,14 @@ int Server::main(const std::vector<std::string>& args) {
     isRunning = true;
     std::thread worker(&Server::logWorker, this, std::ref(client));
 
+    Factory::Ptr factory = new Factory(logs, logsMutex);
+    factory->route("^/log/?$", Factory::getFactory<LogHandler>(std::ref(logs), std::ref(logsMutex)));
+
+    Poco::Net::ServerSocket socket(Poco::Net::SocketAddress("127.0.0.1", 8000));
     Poco::Net::HTTPServerParams::Ptr parameters = new Poco::Net::HTTPServerParams();
     parameters->setTimeout(Poco::Timespan(1, 0));
     parameters->setMaxQueued(1024);
     parameters->setMaxThreads(8);
-
-    Poco::Net::ServerSocket socket(Poco::Net::SocketAddress("127.0.0.1", 8000));
-
-    Factory::Ptr factory = new Factory(logs, logsMutex);
-    factory->route("^/log/?$", Factory::getFactory<LogHandler>(std::ref(logs), std::ref(logsMutex)));
 
     Poco::Net::HTTPServer server(factory, socket, parameters);
 
