@@ -1,5 +1,6 @@
 #include "track_handler.hpp"
 #include "json.hpp"
+#include "format.h"
 
 #include <Poco/URI.h>
 
@@ -11,7 +12,7 @@ thread_local Client TrackHandler::client(ClientOptions().SetHost("localhost"));
 
 inline time_t today() {
     time_t now = time(nullptr);
-    return now - now % SECONDS_IN_DAY;
+    return now - (now % SECONDS_IN_DAY);
 }
 
 inline time_t tomorrow() {
@@ -29,8 +30,8 @@ void TrackHandler::handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Ne
         response.send();
     } else {
         Poco::URI uri(request.getURI());
-        auto params = uri.getQueryParameters();
-        auto it = std::find_if(params.begin(), params.end(), [](const auto& pair) { return pair.first == "id"; });
+        const auto params = uri.getQueryParameters();
+        const auto it = std::find_if(params.begin(), params.end(), [](const auto& pair) { return pair.first == "id"; });
         if (it == params.end() || !is_number(it->second)) {
             response.setStatus(Poco::Net::HTTPServerResponse::HTTP_BAD_REQUEST);
             response.setReason("Bad Request");
@@ -38,10 +39,9 @@ void TrackHandler::handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Ne
             return;
         }
 
-        std::string query = "SELECT toString(time), latitude, longitude, accuracy, speed FROM tracking.logs "
-                                    "WHERE id = " + it->second + " AND time BETWEEN toDateTime(" +
-                            std::to_string(today()) + ") AND toDateTime(" + std::to_string(tomorrow()) + ")";
-
+        const auto query = format("SELECT toString(time), latitude, longitude, accuracy, speed FROM tracking.logs "
+                                    "WHERE id = {} AND time BETWEEN toDateTime({}) AND toDateTime({})",
+                            it->second, today(), tomorrow());
         auto array = Json::array();
         client.Select(query,
                       [&](const Block& block) {
@@ -60,6 +60,4 @@ void TrackHandler::handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Ne
         response.setContentType("application/json");
         response.send() << array;
     }
-
-
 }

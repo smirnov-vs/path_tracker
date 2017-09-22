@@ -16,7 +16,7 @@ void LogHandler::handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net:
         const auto json = readAll(request.stream());
         const auto now = time(nullptr);
         {
-            std::lock_guard<std::mutex> lock(logsMutex);
+            std::lock_guard lock(logsMutex);
             logs.emplace(std::move(json), now);
         }
     }

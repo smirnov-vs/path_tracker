@@ -12,14 +12,14 @@ using Json = nlohmann::json;
 
 void Server::logWorker(Client& client) {
     std::mutex timerMutex;
-    std::unique_lock<std::mutex> timerLock(timerMutex);
+    std::unique_lock timerLock(timerMutex);
 
     while (isRunning) {
         workerCv.wait_for(timerLock, 5s);
 
         logs_t localLogs;
         {
-            std::lock_guard<std::mutex> lock(logsMutex);
+            std::lock_guard lock(logsMutex);
             std::swap(logs, localLogs);
         }
 
@@ -39,12 +39,12 @@ void Server::logWorker(Client& client) {
                 Log log = std::move(localLogs.front());
                 localLogs.pop();
 
-                Json json = Json::parse(log.json);
-                uint64_t id = json["id"];
-                float latitude = json["latitude"];
-                float longitude = json["longitude"];
-                float accuracy = json["accuracy"];
-                float speed = json["speed"];
+                const auto json = Json::parse(log.json);
+                const uint64_t id = json["id"];
+                const float latitude = json["latitude"];
+                const float longitude = json["longitude"];
+                const float accuracy = json["accuracy"];
+                const float speed = json["speed"];
 
                 idColumn->Append(id);
                 timeColumn->Append(log.time);
@@ -74,8 +74,8 @@ int Server::main(const std::vector<std::string>& args) {
     std::thread worker(&Server::logWorker, this, std::ref(client));
 
     Factory::Ptr factory = new Factory();
-    factory->route("^/log/?$", Factory::getFactory<LogHandler>(std::ref(logs), std::ref(logsMutex)));
-    factory->route("^/track/?.*", Factory::getFactory<TrackHandler>());
+    factory->route("^/log/?$", Factory::wrap<LogHandler>(std::ref(logs), std::ref(logsMutex)));
+    factory->route("^/track/?", Factory::wrap<TrackHandler>());
 
     Poco::Net::ServerSocket socket(Poco::Net::SocketAddress("127.0.0.1", 8000));
     Poco::Net::HTTPServerParams::Ptr parameters = new Poco::Net::HTTPServerParams();

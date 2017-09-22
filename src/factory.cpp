@@ -1,8 +1,8 @@
 #include "factory.hpp"
 
 Poco::Net::HTTPRequestHandler* Factory::createRequestHandler(const Poco::Net::HTTPServerRequest& request) {
-    for (auto&& [regex, handler] : routes) {
-        if (std::regex_match(request.getURI(), regex))
+    for (const auto& [regex, handler] : routes) {
+        if (std::regex_search(request.getURI(), regex))
             return handler();
     }
 
