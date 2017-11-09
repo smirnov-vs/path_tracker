@@ -1,22 +1,22 @@
-#include "format.h"
+#include "format.hpp"
 
-std::string sprint(const char* s, const std::vector<std::string>& args)
+std::string sprint(const char* format, const std::vector<std::string>& args)
 {
-	if (s == nullptr)
+	if (format == nullptr)
 		return std::string();
 
 	std::ostringstream ss;
 	size_t idx = 0;
-	while (*s)
+	while (*format)
 	{
-		if (*s == '{' && *(s + 1) == '}')
+		if (*format == '{' && *(format + 1) == '}')
 		{
 			ss << (idx < args.size() ? args[idx++] : "{}");
-			s += 2;
+			format += 2;
 		}
 		else
 		{
-			ss << *s++;
+			ss << *format++;
 		}
 	}
 

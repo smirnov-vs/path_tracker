@@ -3,6 +3,13 @@
 
 #include "factory.hpp"
 
+#include "log_handler.hpp"
+#include "track_handler.hpp"
+#include "signup_handler.hpp"
+#include "signin_handler.hpp"
+#include "me_handler.hpp"
+#include "logout_handler.hpp"
+
 #include <Poco/Util/ServerApplication.h>
 
 #include <atomic>
@@ -10,7 +17,7 @@
 
 class Server final : public Poco::Util::ServerApplication {
 
-    logs_t logs;
+    Logs logs;
     std::mutex logsMutex;
     std::atomic_bool isRunning;
     std::condition_variable workerCv;

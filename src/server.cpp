@@ -1,14 +1,23 @@
 #include "server.hpp"
 #include "json.hpp"
+#include "utils.hpp"
 
 #include <Poco/Net/HTTPServer.h>
 #include <Poco/Net/ServerSocketImpl.h>
 
 #include <thread>
 
+#include <bsoncxx/builder/stream/document.hpp>
+#include <bsoncxx/json.hpp>
+
+#include <mongocxx/client.hpp>
+#include <mongocxx/instance.hpp>
+#include <mongocxx/pool.hpp>
+
 using namespace clickhouse;
 using namespace std::chrono_literals;
 using Json = nlohmann::json;
+using namespace bsoncxx::builder::stream;
 
 void Server::logWorker(Client& client) {
     std::mutex timerMutex;
@@ -17,7 +26,7 @@ void Server::logWorker(Client& client) {
     while (isRunning) {
         workerCv.wait_for(timerLock, 5s);
 
-        logs_t localLogs;
+        Logs localLogs;
         {
             std::lock_guard lock(logsMutex);
             std::swap(logs, localLogs);
@@ -34,11 +43,8 @@ void Server::logWorker(Client& client) {
         auto accuracyColumn = std::make_shared<ColumnFloat64>();
         auto speedColumn = std::make_shared<ColumnFloat64>();
 
-        while (!localLogs.empty()) {
+        for (const auto& log : localLogs) {
             try {
-                Log log = std::move(localLogs.front());
-                localLogs.pop();
-
                 const auto json = Json::parse(log.json);
                 const uint64_t id = json["id"];
                 const float latitude = json["latitude"];
@@ -68,20 +74,35 @@ void Server::logWorker(Client& client) {
 }
 
 int Server::main(const std::vector<std::string>& args) {
-    Client client(ClientOptions().SetHost("localhost"));
+    Client clickhouse(ClientOptions().SetHost("localhost"));
+
+    mongocxx::instance instance;
+    mongocxx::pool pool {mongocxx::uri()};
+    {
+        auto client = pool.acquire();
+        auto users = usersCollection(client);
+        users.create_index(document() << "email" << 1 << finalize, mongocxx::options::index().unique(true));
+    }
+
 
     isRunning = true;
-    std::thread worker(&Server::logWorker, this, std::ref(client));
+    std::thread worker(&Server::logWorker, this, std::ref(clickhouse));
 
     Factory::Ptr factory = new Factory();
-    factory->route("^/log/?$", Factory::wrap<LogHandler>(std::ref(logs), std::ref(logsMutex)));
-    factory->route("^/track/?", Factory::wrap<TrackHandler>());
+    factory->route("^/log/?$", Factory::wrap<LogHandler>(std::ref(logs), std::ref(logsMutex)), Poco::Net::HTTPRequest::HTTP_POST);
+    factory->route("^/track/?", Factory::wrap<TrackHandler>(), Poco::Net::HTTPRequest::HTTP_GET);
+
+    factory->route("^/signup/?$", Factory::wrap<SignupHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_POST);
+    factory->route("^/session/?$", Factory::wrap<MeHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_GET);
+    factory->route("^/session/?$", Factory::wrap<SigninHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_POST);
+    factory->route("^/session/?$", Factory::wrap<LogoutHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_DELETE);
 
     Poco::Net::ServerSocket socket(Poco::Net::SocketAddress("127.0.0.1", 8000));
     Poco::Net::HTTPServerParams::Ptr parameters = new Poco::Net::HTTPServerParams();
-    parameters->setTimeout(Poco::Timespan(1, 0));
+    parameters->setTimeout(Poco::Timespan(15, 0));
     parameters->setMaxQueued(1024);
-    parameters->setMaxThreads(8);
+    auto threads = std::thread::hardware_concurrency();
+    parameters->setMaxThreads(threads != 0 ? threads : 2);
 
     Poco::Net::HTTPServer server(factory, socket, parameters);
 

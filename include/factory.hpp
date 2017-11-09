@@ -1,9 +1,6 @@
 #ifndef PATH_TRACKING_FACTORY_H
 #define PATH_TRACKING_FACTORY_H
 
-#include "log_handler.hpp"
-#include "track_handler.hpp"
-
 #include <Poco/Net/HTTPRequestHandlerFactory.h>
 
 #include <regex>
@@ -11,7 +8,14 @@
 class Factory final : public Poco::Net::HTTPRequestHandlerFactory {
     typedef std::function<Poco::Net::HTTPRequestHandler*()> handlerFactory;
 
-    std::vector<std::pair<std::regex, handlerFactory>> routes;
+    struct Endpoint {
+        handlerFactory handler;
+        std::string method;
+
+        Endpoint(const handlerFactory& handler, const std::string& method);
+    };
+
+    std::vector<std::pair<std::regex, Endpoint>> routes;
 
     Poco::Net::HTTPRequestHandler* createRequestHandler(const Poco::Net::HTTPServerRequest& request) override;
 
@@ -23,7 +27,7 @@ public:
         return [=] { return new T(args...); };
     };
 
-    void route(const std::string& url, const handlerFactory& handlerFactory);
+    void route(const std::string& location, const handlerFactory& handlerFactory, const std::string& method);
 };
 
 #endif //PATH_TRACKING_FACTORY_H

@@ -1,28 +1,20 @@
 #include "log_handler.hpp"
 #include "json.hpp"
-
-inline std::string readAll(std::istream& stream) {
-    return std::string(std::istream_iterator<char>(stream), std::istream_iterator<char>());
-}
+#include "utils.hpp"
 
 Log::Log(const std::string& json, time_t time)
         : json(json), time(time) {}
 
 void LogHandler::handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) {
-    if (request.getMethod() != Poco::Net::HTTPRequest::HTTP_POST) {
-        response.setStatus(Poco::Net::HTTPServerResponse::HTTP_NOT_IMPLEMENTED);
-        response.setReason("Not Implemented");
-    } else {
-        const auto json = readAll(request.stream());
-        const auto now = time(nullptr);
-        {
-            std::lock_guard lock(logsMutex);
-            logs.emplace(std::move(json), now);
-        }
+    auto json = readAll(request.stream());
+    const auto now = time(nullptr);
+    {
+        std::lock_guard lock(logsMutex);
+        logs.emplace_back(std::move(json), now);
     }
 
     response.send();
 }
 
-LogHandler::LogHandler(logs_t& logs, std::mutex& logsMutex)
+LogHandler::LogHandler(Logs& logs, std::mutex& logsMutex)
         : logs(logs), logsMutex(logsMutex) {}

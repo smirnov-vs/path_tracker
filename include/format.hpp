@@ -4,7 +4,7 @@
 #include <sstream>
 #include <vector>
 
-std::string sprint(const char* s, const std::vector<std::string>& args);
+std::string sprint(const char* format, const std::vector<std::string>& args);
 
 namespace std
 {

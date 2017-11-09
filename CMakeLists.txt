@@ -15,11 +15,14 @@ set(POCO_LIBS
         pthread)
 
 
-include_directories(clickhouse-cpp ${POCO_INCLUDE_DIR})
+include_directories(clickhouse-cpp ${POCO_INCLUDE_DIR}
+        /usr/local/include/mongocxx/v_noabi/
+        /usr/local/include/bsoncxx/v_noabi/)
 include_directories(include)
 
 aux_source_directory(src SRC)
 add_executable(${PROJECT_NAME} ${SRC})
 
 target_link_libraries(${PROJECT_NAME} ${POCO_LIBS}
-        clickhouse-cpp-lib cityhash-lib lz4-lib)
+        clickhouse-cpp-lib cityhash-lib lz4-lib
+        mongocxx bsoncxx crypto)

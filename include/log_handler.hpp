@@ -15,17 +15,17 @@ struct Log {
     Log(const std::string& json, time_t time);
 };
 
-typedef std::queue<Log> logs_t;
+typedef std::vector<Log> Logs;
 
 class LogHandler final : public Poco::Net::HTTPRequestHandler {
 
-    logs_t& logs;
+    Logs& logs;
     std::mutex& logsMutex;
 
     void handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) override;
 
 public:
-    LogHandler(logs_t& logs, std::mutex& logsMutex);
+    LogHandler(Logs& logs, std::mutex& logsMutex);
 };
 
 #endif //PATH_TRACKING_LOG_HANDLER_H

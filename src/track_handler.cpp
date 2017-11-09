@@ -1,6 +1,7 @@
 #include "track_handler.hpp"
 #include "json.hpp"
-#include "format.h"
+#include "format.hpp"
+#include "utils.hpp"
 
 #include <Poco/URI.h>
 
@@ -24,40 +25,32 @@ inline bool is_number(const std::string& s) {
 }
 
 void TrackHandler::handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) {
-    if (request.getMethod() != Poco::Net::HTTPRequest::HTTP_GET) {
-        response.setStatus(Poco::Net::HTTPServerResponse::HTTP_NOT_IMPLEMENTED);
-        response.setReason("Not Implemented");
-        response.send();
-    } else {
-        Poco::URI uri(request.getURI());
-        const auto params = uri.getQueryParameters();
-        const auto it = std::find_if(params.begin(), params.end(), [](const auto& pair) { return pair.first == "id"; });
-        if (it == params.end() || !is_number(it->second)) {
-            response.setStatus(Poco::Net::HTTPServerResponse::HTTP_BAD_REQUEST);
-            response.setReason("Bad Request");
-            response.send();
-            return;
-        }
-
-        const auto query = format("SELECT toString(time), latitude, longitude, accuracy, speed FROM tracking.logs "
-                                    "WHERE id = {} AND time BETWEEN toDateTime({}) AND toDateTime({})",
-                            it->second, today(), tomorrow());
-        auto array = Json::array();
-        client.Select(query,
-                      [&](const Block& block) {
-                          for (size_t i = 0; i < block.GetRowCount(); ++i) {
-                              Json json;
-                              json["time"] = block[0]->As<ColumnString>()->At(i);
-                              json["latitude"] = block[1]->As<ColumnFloat64>()->At(i);
-                              json["longitude"] = block[2]->As<ColumnFloat64>()->At(i);
-                              json["accuracy"] = block[3]->As<ColumnFloat64>()->At(i);
-                              json["speed"] = block[4]->As<ColumnFloat64>()->At(i);
-                              array += json;
-                          }
-                      }
-        );
-
-        response.setContentType("application/json");
-        response.send() << array;
+    Poco::URI uri(request.getURI());
+    const auto params = uri.getQueryParameters();
+    const auto it = std::find_if(params.begin(), params.end(), [](const auto &pair) { return pair.first == "id"; });
+    if (it == params.end() || !is_number(it->second)) {
+        sendBadRequest(response);
+        return;
     }
+
+    const auto query = format("SELECT toString(time), latitude, longitude, accuracy, speed FROM tracking.logs "
+                                      "WHERE id = {} AND time BETWEEN toDateTime({}) AND toDateTime({})",
+                              it->second, today(), tomorrow());
+    auto array = Json::array();
+    client.Select(query,
+                  [&](const Block &block) {
+                      for (size_t i = 0; i < block.GetRowCount(); ++i) {
+                          Json json;
+                          json["time"] = block[0]->As<ColumnString>()->At(i);
+                          json["latitude"] = block[1]->As<ColumnFloat64>()->At(i);
+                          json["longitude"] = block[2]->As<ColumnFloat64>()->At(i);
+                          json["accuracy"] = block[3]->As<ColumnFloat64>()->At(i);
+                          json["speed"] = block[4]->As<ColumnFloat64>()->At(i);
+                          array += json;
+                      }
+                  }
+    );
+
+    response.setContentType("application/json");
+    response.send() << array;
 }
