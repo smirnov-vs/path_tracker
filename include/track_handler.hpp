@@ -1,18 +1,18 @@
 #ifndef PATH_TRACKING_TRACK_HANDLER_H
 #define PATH_TRACKING_TRACK_HANDLER_H
 
-#include <Poco/Net/HTTPRequestHandler.h>
-#include <Poco/Net/HTTPServerRequest.h>
-#include <Poco/Net/HTTPServerResponse.h>
+#include "auth_handler.hpp"
 
 #include <clickhouse/client.h>
 
-class TrackHandler final : public Poco::Net::HTTPRequestHandler {
+class TrackHandler final : public AuthHandler {
 
     static thread_local clickhouse::Client client;
 
-    void handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) override;
+    void handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response, const User& user) override;
 
+public:
+    TrackHandler(mongocxx::pool& pool);
 };
 
 #endif //PATH_TRACKING_TRACK_HANDLER_H

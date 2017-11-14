@@ -27,12 +27,6 @@ void sendUnauthorized(Poco::Net::HTTPServerResponse& response) {
     response.send();
 }
 
-void sendNotFound(Poco::Net::HTTPServerResponse& response) {
-    response.setStatus(Poco::Net::HTTPServerResponse::HTTP_NOT_FOUND);
-    response.setReason(Poco::Net::HTTPServerResponse::HTTP_REASON_NOT_FOUND);
-    response.send();
-}
-
 std::string generateToken() {
     std::random_device rd;
     std::mt19937_64 generator(rd());
@@ -44,15 +38,16 @@ std::string generateToken() {
     return ss.str();
 }
 
-std::string sha256(const std::string& str) {
+std::string sha256(const std::string& value) {
     unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
-    SHA256_Update(&sha256, str.c_str(), str.size());
+    SHA256_Update(&sha256, value.c_str(), value.size());
     SHA256_Final(hash, &sha256);
     std::stringstream ss;
+    ss << std::hex << std::setw(2) << std::setfill('0');
     for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i)
-        ss << std::hex << std::setw(2) << std::setfill('0') << (int) hash[i];
+        ss << (int)hash[i];
 
     return ss.str();
 }

@@ -1,5 +1,4 @@
 #include "server.hpp"
-#include "json.hpp"
 #include "utils.hpp"
 
 #include <Poco/Net/HTTPServer.h>
@@ -7,12 +6,8 @@
 
 #include <thread>
 
-#include <bsoncxx/builder/stream/document.hpp>
-#include <bsoncxx/json.hpp>
-
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
-#include <mongocxx/pool.hpp>
 
 using namespace clickhouse;
 using namespace std::chrono_literals;
@@ -36,7 +31,7 @@ void Server::logWorker(Client& client) {
             continue;
 
         Block block;
-        auto idColumn = std::make_shared<ColumnUInt64>();
+        auto idColumn = std::make_shared<ColumnString>();
         auto timeColumn = std::make_shared<ColumnDateTime>();
         auto latitudeColumn = std::make_shared<ColumnFloat64>();
         auto longitudeColumn = std::make_shared<ColumnFloat64>();
@@ -46,13 +41,12 @@ void Server::logWorker(Client& client) {
         for (const auto& log : localLogs) {
             try {
                 const auto json = Json::parse(log.json);
-                const uint64_t id = json["id"];
                 const float latitude = json["latitude"];
                 const float longitude = json["longitude"];
                 const float accuracy = json["accuracy"];
                 const float speed = json["speed"];
 
-                idColumn->Append(id);
+                idColumn->Append(log.userId);
                 timeColumn->Append(log.time);
                 latitudeColumn->Append(latitude);
                 longitudeColumn->Append(longitude);
@@ -89,8 +83,8 @@ int Server::main(const std::vector<std::string>& args) {
     std::thread worker(&Server::logWorker, this, std::ref(clickhouse));
 
     Factory::Ptr factory = new Factory();
-    factory->route("^/log/?$", Factory::wrap<LogHandler>(std::ref(logs), std::ref(logsMutex)), Poco::Net::HTTPRequest::HTTP_POST);
-    factory->route("^/track/?", Factory::wrap<TrackHandler>(), Poco::Net::HTTPRequest::HTTP_GET);
+    factory->route("^/log/?$", Factory::wrap<LogHandler>(std::ref(pool), std::ref(logs), std::ref(logsMutex)), Poco::Net::HTTPRequest::HTTP_POST);
+    factory->route("^/track/?", Factory::wrap<TrackHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_GET);
 
     factory->route("^/signup/?$", Factory::wrap<SignupHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_POST);
     factory->route("^/session/?$", Factory::wrap<MeHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_GET);

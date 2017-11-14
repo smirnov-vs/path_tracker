@@ -9,12 +9,9 @@
 
 #include <json.hpp>
 
-
 struct User {
     std::string id;
     std::string email;
-
-    User(const std::string& id, const std::string& email);
 };
 
 void to_json(nlohmann::json& j, const User& p);

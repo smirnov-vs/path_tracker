@@ -3,8 +3,6 @@
 
 #include "auth_handler.hpp"
 
-#include <mongocxx/pool.hpp>
-
 class LogoutHandler final : public AuthHandler {
 
     void handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response, const User& user) override;

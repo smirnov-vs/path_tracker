@@ -14,9 +14,8 @@ mongocxx::collection usersCollection(mongocxx::pool::entry& client);
 
 void sendBadRequest(Poco::Net::HTTPServerResponse& response);
 void sendUnauthorized(Poco::Net::HTTPServerResponse& response);
-void sendNotFound(Poco::Net::HTTPServerResponse& response);
 
 std::string generateToken();
-std::string sha256(const std::string& str);
+std::string sha256(const std::string& value);
 
 #endif //PATH_TRACKING_UTILS_HPP

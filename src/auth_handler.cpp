@@ -5,9 +5,6 @@
 
 using namespace bsoncxx::builder::stream;
 
-User::User(const std::string &id, const std::string &email)
-        : id(id), email(email) {}
-
 void to_json(nlohmann::json& j, const User& u) {
     j = {
             {"id",    u.id},
@@ -30,8 +27,8 @@ void AuthHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Net
     auto result = users.find_one(document() << "token" << it->second << finalize);
     if (result) {
         auto view = result->view();
-        User user(view["_id"].get_oid().value.to_string(),
-                  view["email"].get_utf8().value.to_string());
+        User user{view["_id"].get_oid().value.to_string(),
+                  view["email"].get_utf8().value.to_string()};
         handleRequest(request, response, user);
     } else {
         sendUnauthorized(response);

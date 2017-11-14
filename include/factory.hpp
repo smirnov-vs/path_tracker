@@ -11,8 +11,6 @@ class Factory final : public Poco::Net::HTTPRequestHandlerFactory {
     struct Endpoint {
         handlerFactory handler;
         std::string method;
-
-        Endpoint(const handlerFactory& handler, const std::string& method);
     };
 
     std::vector<std::pair<std::regex, Endpoint>> routes;
