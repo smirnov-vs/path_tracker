@@ -3,6 +3,7 @@
 
 void LogoutHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const User& user) {
     Poco::Net::HTTPCookie cookie("token");
+    cookie.setPath("/");
     cookie.setMaxAge(0);
     response.addCookie(cookie);
     response.send();

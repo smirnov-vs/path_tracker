@@ -16,14 +16,12 @@ mongocxx::collection usersCollection(mongocxx::pool::entry& client) {
 }
 
 void sendBadRequest(Poco::Net::HTTPServerResponse& response) {
-    response.setStatus(Poco::Net::HTTPServerResponse::HTTP_BAD_REQUEST);
-    response.setReason(Poco::Net::HTTPServerResponse::HTTP_REASON_BAD_REQUEST);
+    response.setStatusAndReason(Poco::Net::HTTPServerResponse::HTTP_BAD_REQUEST);
     response.send();
 }
 
 void sendUnauthorized(Poco::Net::HTTPServerResponse& response) {
-    response.setStatus(Poco::Net::HTTPServerResponse::HTTP_UNAUTHORIZED);
-    response.setReason(Poco::Net::HTTPServerResponse::HTTP_REASON_UNAUTHORIZED);
+    response.setStatusAndReason(Poco::Net::HTTPServerResponse::HTTP_UNAUTHORIZED);
     response.send();
 }
 

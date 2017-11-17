@@ -10,14 +10,18 @@
 
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no, maximum-scale=1"/>
 </head>
-<body>
+<body onload="session()">
 
 <div class="container">
     <nav>
         <div class="nav-wrapper">
-            <span class="brand-logo">Трекинг</span>
-            <ul id="nav-mobile" class="right hide-on-med-and-down">
-                <li><a href="#">Войти</a></li>
+            <ul class="left hide-on-med-and-down">
+                <input type="text" class="datepicker">
+            </ul>
+            <span class="brand-logo center">Трекинг</span>
+            <ul class="right hide-on-med-and-down">
+                <li id="nav_email"></li>&nbsp;&nbsp;
+                <li><a href="#" onclick="logout()">Выйти</a></li>
             </ul>
         </div>
     </nav>

@@ -83,13 +83,13 @@ int Server::main(const std::vector<std::string>& args) {
     std::thread worker(&Server::logWorker, this, std::ref(clickhouse));
 
     Factory::Ptr factory = new Factory();
-    factory->route("^/log/?$", Factory::wrap<LogHandler>(std::ref(pool), std::ref(logs), std::ref(logsMutex)), Poco::Net::HTTPRequest::HTTP_POST);
-    factory->route("^/track/?", Factory::wrap<TrackHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_GET);
+    factory->route("^/api/log/?$", Factory::wrap<LogHandler>(std::ref(pool), std::ref(logs), std::ref(logsMutex)), Poco::Net::HTTPRequest::HTTP_POST);
+    factory->route("^/api/track/?", Factory::wrap<TrackHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_GET);
 
-    factory->route("^/signup/?$", Factory::wrap<SignupHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_POST);
-    factory->route("^/session/?$", Factory::wrap<MeHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_GET);
-    factory->route("^/session/?$", Factory::wrap<SigninHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_POST);
-    factory->route("^/session/?$", Factory::wrap<LogoutHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_DELETE);
+    factory->route("^/api/signup/?$", Factory::wrap<SignupHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_POST);
+    factory->route("^/api/session/?$", Factory::wrap<MeHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_GET);
+    factory->route("^/api/session/?$", Factory::wrap<SigninHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_POST);
+    factory->route("^/api/session/?$", Factory::wrap<LogoutHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_DELETE);
 
     Poco::Net::ServerSocket socket(Poco::Net::SocketAddress("127.0.0.1", 8000));
     Poco::Net::HTTPServerParams::Ptr parameters = new Poco::Net::HTTPServerParams();

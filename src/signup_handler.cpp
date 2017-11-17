@@ -38,6 +38,7 @@ void SignupHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::N
     }
 
     Poco::Net::HTTPCookie cookie("token", token);
+    cookie.setPath("/");
     cookie.setHttpOnly(true);
     //cookie.setSecure(true);
     cookie.setMaxAge(60 * 60 * 24 * 30);

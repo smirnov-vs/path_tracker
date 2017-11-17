@@ -4,7 +4,7 @@ USE tracking;
 
 CREATE TABLE logs
 (
-    id UInt64,
+    id String,
     time DateTime DEFAULT now(),
     latitude Float64,
     longitude Float64,

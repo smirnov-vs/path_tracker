@@ -28,6 +28,7 @@ void SigninHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::N
         auto view = result->view();
 
         Poco::Net::HTTPCookie cookie("token", view["token"].get_utf8().value.to_string());
+        cookie.setPath("/");
         cookie.setHttpOnly(true);
         //cookie.setSecure(true);
         cookie.setMaxAge(60 * 60 * 24 * 30);
