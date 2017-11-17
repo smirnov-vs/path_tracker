@@ -57,7 +57,7 @@ function login(signup = false) {
         },
 
         success: () => {
-            window.location.replace('index.html');
+            window.location.replace('/');
         },
         error: () => {
             alert('Error :(');
@@ -77,10 +77,10 @@ function logout() {
             withCredentials: true
         },
         success: () => {
-            window.location.replace('login.html');
+            window.location.replace('login');
         },
         error: () => {
-            window.location.replace('login.html');
+            window.location.replace('login');
         },
     });
 }
@@ -89,7 +89,7 @@ function session() {
     $.getJSON("/api/session").done((data) => {
         $("#nav_email").text(data.email);
     }).fail(() => {
-        window.location.replace('login.html');
+        window.location.replace('login');
     });
 
     const picker = $('.datepicker').pickadate({
