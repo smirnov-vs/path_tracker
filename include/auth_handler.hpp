@@ -12,7 +12,8 @@
 struct User {
     std::string id;
     std::string email;
-    std::vector<std::string> friends;
+    std::vector<std::string> in_friends;
+    std::vector<std::string> out_friends;
 };
 
 void to_json(nlohmann::json& j, const User& p);

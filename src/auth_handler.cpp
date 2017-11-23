@@ -9,8 +9,19 @@ void to_json(nlohmann::json& j, const User& u) {
     j = {
             {"id",      u.id},
             {"email",   u.email},
-            {"friends", u.friends},
+            {"in_friends", u.in_friends},
+            {"out_friends", u.out_friends},
     };
+}
+
+auto convertFriends(const auto& friendsView) {
+    std::vector<std::string> friends;
+    if (friendsView) {
+        auto dbFriends = friendsView.get_array().value;
+        for (const auto &i : dbFriends)
+            friends.emplace_back(i.get_utf8().value.to_string());
+    }
+    return friends;
 }
 
 void AuthHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) {
@@ -28,17 +39,10 @@ void AuthHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Net
     auto result = users.find_one(document() << "token" << it->second << finalize);
     if (result) {
         auto view = result->view();
-        std::vector<std::string> friends;
-        auto friendsView = view["friends"];
-        if (friendsView) {
-            auto dbFriends = friendsView.get_array().value;
-            for (const auto &i : dbFriends)
-                friends.emplace_back(i.get_utf8().value.to_string());
-        }
-
         User user{view["_id"].get_oid().value.to_string(),
                   view["email"].get_utf8().value.to_string(),
-                  friends
+                  convertFriends(view["in_friends"]),
+                  convertFriends(view["out_friends"])
         };
         handleRequest(request, response, user);
     } else {

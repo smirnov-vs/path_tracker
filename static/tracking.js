@@ -59,23 +59,28 @@ function initPicker() {
     currentTrackDate = now.getTime();
 }
 
-$(document).ready(function(){
-    $('.modal').modal();
-    $('.dropdown-button').dropdown({
-            constrainWidth: false,
-        }
-    );
+if (window.location.pathname === '/') {
+    $(document).ready(function () {
+        $('.modal').modal();
+        $('.dropdown-button').dropdown({
+                constrainWidth: false,
+            }
+        );
 
-    $.getJSON("/api/session").done((data) => {
-        $("#nav_email").text(data.email);
-        let number = 0;
-        data.friends.forEach((el) => {
-            $("#dropdown1").append('<li id="friend' + number + '"><a><i class="material-icons" onclick="deleteFriend(' + number++ + ')">delete</i><poop>' + el + '</poop></a></li>')
-        })
-    }).fail(() => {
-        window.location.replace('login');
+        $.getJSON("/api/session").done((data) => {
+            $("#nav_email").text(data.email);
+            let number = 0;
+            data.in_friends.forEach((el) => {
+                $("#dropdown2").append('<li><a>' + el + '</a></li>')
+            });
+            data.out_friends.forEach((el) => {
+                $("#dropdown1").append('<li id="friend' + number + '"><a><i class="material-icons" onclick="deleteFriend(' + number++ + ')">delete</i><poop>' + el + '</poop></a></li>')
+            })
+        }).fail(() => {
+            window.location.replace('login');
+        });
     });
-});
+}
 
 ymaps.ready(() => {
     initPicker();

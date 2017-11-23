@@ -7,10 +7,10 @@ using namespace bsoncxx::builder::stream;
 using Json = nlohmann::json;
 
 void DeleteFriendHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const User &user) {
-    Json json;
+    std::string email;
     try {
-        json = Json::parse(readAll(request.stream()));
-        if (json.find("email") == json.end()) {
+        Json json = Json::parse(readAll(request.stream()));
+        if (json.find("email") == json.end() || (email = (std::string)json["email"]).empty()) {
             sendBadRequest(response);
             return;
         }
@@ -19,19 +19,43 @@ void DeleteFriendHandler::handleRequest(Poco::Net::HTTPServerRequest &request, P
         return;
     }
 
-    auto doc_filter = document()
-            << "_id" << bsoncxx::oid(user.id)
-            << finalize;
-
-    auto doc_value = document()
-            << "$pull" << bsoncxx::builder::stream::open_document
-            << "friends" << (std::string)json["email"]
-            << bsoncxx::builder::stream::close_document
-            << finalize;
-
     auto client = pool.acquire();
+    auto users = usersCollection(client);
 
-    usersCollection(client).update_one(doc_filter.view(), doc_value.view());
+    {
+        auto doc_filter = document()
+                << "email" << email
+                << finalize;
+        auto doc_value = document()
+                << "$pull" << bsoncxx::builder::stream::open_document
+                << "in_friends" << user.email
+                << bsoncxx::builder::stream::close_document
+                << finalize;
+
+        auto result = users.update_one(doc_filter.view(), doc_value.view());
+        if (!result || result->modified_count() == 0) {
+            sendBadRequest(response);
+            return;
+        }
+    }
+
+    {
+        auto doc_filter = document()
+                << "_id" << bsoncxx::oid(user.id)
+                << finalize;
+
+        auto doc_value = document()
+                << "$pull" << bsoncxx::builder::stream::open_document
+                << "out_friends" << email
+                << bsoncxx::builder::stream::close_document
+                << finalize;
+
+        auto result = users.update_one(doc_filter.view(), doc_value.view());
+        if (!result) {
+            sendBadRequest(response);
+            return;
+        }
+    }
 
     response.send();
 }
