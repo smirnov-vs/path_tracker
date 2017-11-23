@@ -3,7 +3,7 @@ let newTrackDate;
 let map;
 
 function getTrack() {
-    const time = Math.floor(currentTrackDate.getTime() / 1000);
+    const time = Math.floor(currentTrackDate / 1000);
     $.getJSON("/api/track?time=" + time).done((data) => {
         const myCollection = new ymaps.GeoObjectCollection();
         const points = [];
@@ -56,7 +56,7 @@ function initPicker() {
 
     let now = new Date();
     picker.pickadate('picker').set('select', now);
-    currentTrackDate = now;
+    currentTrackDate = now.getTime();
 }
 
 $(document).ready(function(){

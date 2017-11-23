@@ -7,15 +7,25 @@
 using namespace clickhouse;
 using Json = nlohmann::json;
 
-static constexpr size_t SECONDS_IN_DAY = 24*60*60;
+static constexpr std::time_t SECONDS_IN_DAY = 24*60*60;
 thread_local Client TrackHandler::client(ClientOptions().SetHost("localhost"));
 
-inline std::time_t today(std::time_t timeOfDay) {
-    return timeOfDay - (timeOfDay % SECONDS_IN_DAY);
+std::string formatDateTime(std::time_t dateTime) {
+    std::stringstream ss;
+    tm timeinfo;
+    localtime_r(&dateTime, &timeinfo);
+    ss << std::put_time(&timeinfo, "%F %T");
+    return ss.str();
 }
 
-inline std::time_t tomorrow(std::time_t timeOfDay) {
-    return today(timeOfDay) + SECONDS_IN_DAY;
+std::string today(std::time_t timeOfDay) {
+    auto today = timeOfDay - (timeOfDay % SECONDS_IN_DAY);
+    return formatDateTime(today);
+}
+
+std::string tomorrow(std::time_t timeOfDay) {
+    auto tomorrow = timeOfDay - (timeOfDay % SECONDS_IN_DAY) + SECONDS_IN_DAY;
+    return formatDateTime(tomorrow);
 }
 
 inline bool is_number(const std::string& s) {
@@ -37,7 +47,7 @@ void TrackHandler::handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Ne
     std::time_t time = std::stol(it->second, nullptr, 10);
 
     const auto query = format("SELECT toString(time), latitude, longitude, accuracy, speed FROM tracking.logs "
-                                      "WHERE id = '{}' AND time BETWEEN toDateTime({}) AND toDateTime({}) ORDER BY time",
+                                      "WHERE id = '{}' AND time BETWEEN {} AND {} ORDER BY time",
                               user.id, today(time), tomorrow(time));
     auto array = Json::array();
     client.Select(query,
