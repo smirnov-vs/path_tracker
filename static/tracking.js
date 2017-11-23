@@ -29,13 +29,57 @@ function getTrack() {
             map.geoObjects.add(polyline);
             map.setBounds(polyline.geometry.getBounds());
         }
-        debugger
     }).fail(() => {
         Materialize.toast('Произошла ошибка при загрузке данных', 10000, 'rounded');
     });
 }
 
+function initPicker() {
+    const picker = $('.datepicker').pickadate({
+        selectMonths: true, // Creates a dropdown to control month
+        selectYears: 15, // Creates a dropdown of 15 years to control year,
+        today: 'Today',
+        clear: 'Clear',
+        close: 'Ok',
+        closeOnSelect: false, // Close upon selecting a date,
+        defaultDate: new Date(),
+        onSet: (data) => {
+            newTrackDate = data.select;
+        },
+        onClose: () => {
+            if (currentTrackDate !== newTrackDate) {
+                currentTrackDate = newTrackDate;
+                getTrack();
+            }
+        }
+    });
+
+    let now = new Date();
+    picker.pickadate('picker').set('select', now);
+    currentTrackDate = now;
+}
+
+$(document).ready(function(){
+    $('.modal').modal();
+    $('.dropdown-button').dropdown({
+            constrainWidth: false,
+        }
+    );
+
+    $.getJSON("/api/session").done((data) => {
+        $("#nav_email").text(data.email);
+        let number = 0;
+        data.friends.forEach((el) => {
+            $("#dropdown1").append('<li id="friend' + number + '"><a><i class="material-icons" onclick="deleteFriend(' + number++ + ')">delete</i><poop>' + el + '</poop></a></li>')
+        })
+    }).fail(() => {
+        window.location.replace('login');
+    });
+});
+
 ymaps.ready(() => {
+    initPicker();
+
     map = new ymaps.Map("map", {
         center: [55.76, 37.64],
         zoom: 7
@@ -85,31 +129,50 @@ function logout() {
     });
 }
 
-function session() {
-    $.getJSON("/api/session").done((data) => {
-        $("#nav_email").text(data.email);
-    }).fail(() => {
-        window.location.replace('login');
-    });
+function addFriend() {
+    let email = $('#friend_email').val();
 
-    const picker = $('.datepicker').pickadate({
-        selectMonths: true, // Creates a dropdown to control month
-        selectYears: 15, // Creates a dropdown of 15 years to control year,
-        today: 'Today',
-        clear: 'Clear',
-        close: 'Ok',
-        closeOnSelect: false, // Close upon selecting a date,
-        defaultDate: new Date(),
-        onSet: (data) => {
-            newTrackDate = data.select;
+    $.ajax({
+        url: '/api/friends',
+        type: 'post',
+        dataType: 'text',
+        xhrFields: {
+            withCredentials: true
         },
-        onClose: () => {
-            if (currentTrackDate !== newTrackDate) {
-                currentTrackDate = newTrackDate;
-                getTrack();
-            }
-        }
-    });
 
-    picker.pickadate('picker').set('select', new Date());
+        success: () => {
+            alert('Friend added');
+        },
+        error: () => {
+            alert('Error :(');
+        },
+        data: JSON.stringify({
+            email: email
+        })
+    });
+}
+
+function deleteFriend(number) {
+    let element = $("#friend" + number);
+    let email = element.find("poop").text();
+
+    $.ajax({
+        url: '/api/friends',
+        type: 'delete',
+        dataType: 'text',
+        xhrFields: {
+            withCredentials: true
+        },
+
+        success: () => {
+            alert('Friend deleted');
+            element.remove()
+        },
+        error: () => {
+            alert('Error :(');
+        },
+        data: JSON.stringify({
+            email: email
+        })
+    });
 }

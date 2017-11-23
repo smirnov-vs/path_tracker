@@ -78,7 +78,6 @@ int Server::main(const std::vector<std::string>& args) {
         users.create_index(document() << "email" << 1 << finalize, mongocxx::options::index().unique(true));
     }
 
-
     isRunning = true;
     std::thread worker(&Server::logWorker, this, std::ref(clickhouse));
 
@@ -90,6 +89,9 @@ int Server::main(const std::vector<std::string>& args) {
     factory->route("^/api/session/?$", Factory::wrap<MeHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_GET);
     factory->route("^/api/session/?$", Factory::wrap<SigninHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_POST);
     factory->route("^/api/session/?$", Factory::wrap<LogoutHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_DELETE);
+
+    factory->route("^/api/friends/?$", Factory::wrap<AddFriendHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_POST);
+    factory->route("^/api/friends/?$", Factory::wrap<DeleteFriendHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_DELETE);
 
     Poco::Net::ServerSocket socket(Poco::Net::SocketAddress("127.0.0.1", 8000));
     Poco::Net::HTTPServerParams::Ptr parameters = new Poco::Net::HTTPServerParams();

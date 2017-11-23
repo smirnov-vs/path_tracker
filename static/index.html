@@ -10,9 +10,13 @@
 
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no, maximum-scale=1"/>
 </head>
-<body onload="session()">
+<body>
 
 <div class="container">
+    <ul id="dropdown1" class="dropdown-content">
+        <li><a href="#modal1" class="modal-trigger">Добавить друга</a></li>
+        <li class="divider"></li>
+    </ul>
     <nav>
         <div class="nav-wrapper">
             <ul class="left hide-on-med-and-down">
@@ -20,8 +24,8 @@
             </ul>
             <span class="brand-logo center">Трекинг</span>
             <ul class="right hide-on-med-and-down">
-                <li id="nav_email"></li>&nbsp;&nbsp;
-                <li><a href="#" onclick="logout()">Выйти</a></li>
+                <li><a class="dropdown-button" data-activates="dropdown1" id="nav_email"></a></li>
+                <li><a onclick="logout()">Выйти</a></li>
             </ul>
         </div>
     </nav>
@@ -29,6 +33,26 @@
 
     <div class="row center-align">
         <div id="map"></div>
+    </div>
+
+    <!-- Modal Structure -->
+    <div id="modal1" class="modal modal-fixed-footer add-friend">
+        <div class="modal-content">
+            <h4>Добавить друга</h4>
+            <form class="col s12">
+                <div class="row">
+                    <div class="input-field col s12">
+                        <i class="material-icons prefix">email</i>
+                        <input id="friend_email" type="email" class="validate">
+                        <label for="friend_email">Email</label>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-action modal-close waves-effect waves-green btn-flat" onclick="addFriend()">Добавить</a>
+            <a class="modal-action modal-close waves-effect waves-green btn-flat">Отмена</a>
+        </div>
     </div>
 
 </div>

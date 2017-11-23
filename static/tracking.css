@@ -141,3 +141,7 @@ body {
 .picker__input {
     text-align: center;
 }
+
+.add-friend {
+    height: 40% !important;
+}
