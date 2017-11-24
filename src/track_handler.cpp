@@ -46,7 +46,7 @@ void TrackHandler::handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Ne
     }
     std::time_t time = std::stol(it->second, nullptr, 10);
 
-    const auto query = format("SELECT toString(time), latitude, longitude, accuracy, speed FROM tracking.logs "
+    const auto query = format("SELECT toString(time, 'Europe/Moscow'), latitude, longitude, accuracy, speed FROM tracking.logs "
                                       "WHERE id = '{}' AND time BETWEEN '{}' AND '{}' ORDER BY time",
                               user.id, today(time), tomorrow(time));
     auto array = Json::array();
