@@ -46,8 +46,12 @@ void Server::logWorker(Client& client) {
                 const float accuracy = json["accuracy"];
                 const float speed = json["speed"];
 
+                time_t pendingTime = 0;
+                if (auto it = json.find("time"); it != json.end())
+                    pendingTime = (time_t)*it;
+
                 idColumn->Append(log.userId);
-                timeColumn->Append(log.time);
+                timeColumn->Append(pendingTime == 0 ? log.time : pendingTime);
                 latitudeColumn->Append(latitude);
                 longitudeColumn->Append(longitude);
                 accuracyColumn->Append(accuracy);
