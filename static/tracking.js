@@ -5,15 +5,15 @@ let map;
 function getTrack() {
     const time = Math.floor(currentTrackDate / 1000);
     $.getJSON("/api/track?time=" + time).done((data) => {
-        const myCollection = new ymaps.GeoObjectCollection();
+        const trackCollection = new ymaps.GeoObjectCollection();
         const points = [];
         data.forEach((item) => {
             const point = [item.latitude, item.longitude];
-            myCollection.add(new ymaps.Placemark(point, {
+            trackCollection.add(new ymaps.Placemark(point, {
                 hintContent: item.latitude + ", " + item.longitude,
                 balloonContent: 'Время: ' + item.time
             }));
-            myCollection.add(new ymaps.GeoObject({
+            trackCollection.add(new ymaps.GeoObject({
                 geometry: {
                     type: "Circle",
                     coordinates: point,
@@ -25,7 +25,7 @@ function getTrack() {
 
         if (points.length > 0) {
             const polyline = new ymaps.Polyline(points);
-            map.geoObjects.add(myCollection);
+            map.geoObjects.add(trackCollection);
             map.geoObjects.add(polyline);
             map.setBounds(polyline.geometry.getBounds());
         }
@@ -66,19 +66,6 @@ if (window.location.pathname === '/') {
                 constrainWidth: false,
             }
         );
-
-        $.getJSON("/api/session").done((data) => {
-            $("#nav_email").text(data.email);
-            let number = 0;
-            data.in_friends.forEach((el) => {
-                $("#dropdown2").append('<li><a>' + el + '</a></li>')
-            });
-            data.out_friends.forEach((el) => {
-                $("#dropdown1").append('<li id="friend' + number + '"><a><i class="material-icons" onclick="deleteFriend(' + number++ + ')">delete</i><poop>' + el + '</poop></a></li>')
-            })
-        }).fail(() => {
-            window.location.replace('login');
-        });
     });
 }
 
@@ -88,6 +75,25 @@ ymaps.ready(() => {
     map = new ymaps.Map("map", {
         center: [55.76, 37.64],
         zoom: 7
+    });
+
+    $.getJSON("/api/session").done((data) => {
+        $("#nav_email").text(data.email);
+        let number = 0;
+        data.in_friends.forEach((el) => {
+            $("#dropdown2").append('<li><a>' + el + '</a></li>')
+        });
+        data.out_friends.forEach((el) => {
+            $("#dropdown1").append('<li id="friend' + number + '"><a><i class="material-icons" onclick="deleteFriend(' + number++ + ')">delete</i><poop>' + el + '</poop></a></li>')
+        });
+
+        const areas = new ymaps.GeoObjectCollection();
+        data.areas.forEach((el) => {
+            areas.add(new ymaps.Circle([[el.latitude, el.longitude], el.radius], {}, { fillColor: "00FF0077" }));
+        });
+        map.geoObjects.add(areas);
+    }).fail(() => {
+        window.location.replace('login');
     });
 
     getTrack();
