@@ -7,16 +7,7 @@
 
 #include <mongocxx/pool.hpp>
 
-#include <json.hpp>
-
-struct User {
-    std::string id;
-    std::string email;
-    std::vector<std::string> in_friends;
-    std::vector<std::string> out_friends;
-};
-
-void to_json(nlohmann::json& j, const User& p);
+#include "user.hpp"
 
 class AuthHandler : public Poco::Net::HTTPRequestHandler {
 

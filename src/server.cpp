@@ -97,6 +97,9 @@ int Server::main(const std::vector<std::string>& args) {
     factory->route("^/api/friends/?$", Factory::wrap<AddFriendHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_POST);
     factory->route("^/api/friends/?$", Factory::wrap<DeleteFriendHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_DELETE);
 
+    factory->route("^/api/areas/?$", Factory::wrap<AddAreaHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_POST);
+    factory->route("^/api/areas/?$", Factory::wrap<DeleteAreaHandler>(std::ref(pool)), Poco::Net::HTTPRequest::HTTP_DELETE);
+
     Poco::Net::ServerSocket socket(Poco::Net::SocketAddress("127.0.0.1", 8000));
     Poco::Net::HTTPServerParams::Ptr parameters = new Poco::Net::HTTPServerParams();
     parameters->setTimeout(Poco::Timespan(15, 0));

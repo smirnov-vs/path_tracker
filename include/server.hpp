@@ -11,6 +11,8 @@
 #include "logout_handler.hpp"
 #include "add_friend_handler.hpp"
 #include "delete_friend_handler.hpp"
+#include "add_area_handler.hpp"
+#include "delete_area_handler.hpp"
 
 #include <Poco/Util/ServerApplication.h>
 

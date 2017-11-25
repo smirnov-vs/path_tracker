@@ -3,8 +3,8 @@
 using Json = nlohmann::json;
 
 void MeHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const User& user) {
-    Json json = user;
-    response.send() << json;
+    response.setContentType("application/json");
+    response.send() << (Json)user;
 }
 
 MeHandler::MeHandler(mongocxx::pool &pool)
