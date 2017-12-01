@@ -1,10 +1,11 @@
+let map;
 let currentTrackDate;
 let newTrackDate;
-let map;
+let currentTrackUser = 'me';
 
 function getTrack() {
     const time = Math.floor(currentTrackDate / 1000);
-    $.getJSON("/api/track?time=" + time).done((data) => {
+    $.getJSON("/api/track?time=" + time + '&who=' + currentTrackUser).done((data) => {
         const trackCollection = new ymaps.GeoObjectCollection();
         const points = [];
         data.forEach((item) => {
@@ -36,19 +37,20 @@ function getTrack() {
 
 function initPicker() {
     const picker = $('.datepicker').pickadate({
-        selectMonths: true, // Creates a dropdown to control month
-        selectYears: 15, // Creates a dropdown of 15 years to control year,
+        selectMonths: true,
+        selectYears: 15,
         today: 'Today',
         clear: 'Clear',
         close: 'Ok',
-        closeOnSelect: false, // Close upon selecting a date,
+        closeOnSelect: false,
         defaultDate: new Date(),
         onSet: (data) => {
             newTrackDate = data.select;
         },
         onClose: () => {
             if (currentTrackDate !== newTrackDate) {
-                currentTrackDate = newTrackDate;
+                currentTrackDate = newTrackDate + 10800000;
+                map.geoObjects.removeAll();
                 getTrack();
             }
         }
@@ -84,7 +86,7 @@ ymaps.ready(() => {
             $("#dropdown1").append('<li id="friend' + number + '"><a><i class="material-icons" onclick="deleteFriend(' + number++ + ')">delete</i><poop>' + el + '</poop></a></li>')
         });
         data.in_friends.forEach((el) => {
-            $("#dropdown2").append('<li><a>' + el + '</a></li>')
+            $("#dropdown2").append('<li><a onclick="changeTrackUser(\'' + el + '\')">' + el + '</a></li>')
         });
 
         const areas = new ymaps.GeoObjectCollection();
@@ -257,4 +259,10 @@ function sendArea(name, coords, polygon) {
             coordinates: coordinates
         })
     });
+}
+
+function changeTrackUser(user) {
+    currentTrackUser = user;
+    map.geoObjects.removeAll();
+    getTrack();
 }
