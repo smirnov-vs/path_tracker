@@ -43,7 +43,7 @@ void SigninHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::N
                     << finalize;
 
             auto result = users.update_one(doc_filter.view(), doc_value.view());
-            if (!result || result->modified_count() == 0) {
+            if (!result || result->matched_count() == 0) {
                 sendUnauthorized(response);
                 return;
             }
