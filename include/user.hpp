@@ -3,13 +3,20 @@
 
 #include "json.hpp"
 
-struct Area {
-    std::string id;
+struct Coordinate {
     double latitude;
     double longitude;
-    double radius;
 
-    Area(const std::string& id, double latitude, double longitude, double radius);
+    Coordinate() = default;
+    Coordinate(double latitude, double longitude);
+};
+
+struct Area {
+    std::string id;
+    std::string name;
+    std::vector<Coordinate> coordinates;
+
+    Area(const std::string& id, const std::string& name, const std::vector<Coordinate>& coordinates);
 };
 
 struct User {
@@ -20,6 +27,7 @@ struct User {
     std::vector<Area> areas;
 };
 
+void from_json(const nlohmann::json& j, Coordinate& coordinate);
 void to_json(nlohmann::json& j, const User& user);
 
 #endif //PATH_TRACKING_USER_HPP

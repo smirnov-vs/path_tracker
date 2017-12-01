@@ -15,6 +15,19 @@ auto convertFriends(const bsoncxx::document::element& friendsView) {
     return friends;
 }
 
+auto convertCoords(const bsoncxx::document::element& coordsView) {
+    std::vector<Coordinate> coords;
+    if (coordsView) {
+        auto dbFriends = coordsView.get_array().value;
+        for (const auto& i : dbFriends) {
+            auto document = i.get_document().value;
+            coords.emplace_back(document["latitude"].get_double().value,
+                                document["longitude"].get_double().value);
+        }
+    }
+    return coords;
+}
+
 auto convertAreas(const bsoncxx::document::element& areasView) {
     std::vector<Area> areas;
     if (areasView) {
@@ -22,9 +35,8 @@ auto convertAreas(const bsoncxx::document::element& areasView) {
         for (const auto& i : dbAreas) {
             auto document = i.get_document().value;
             areas.emplace_back(document["_id"].get_oid().value.to_string(),
-                               document["latitude"].get_double().value,
-                               document["longitude"].get_double().value,
-                               document["radius"].get_double().value);
+                               document["name"].get_utf8().value.to_string(),
+                               convertCoords(document["coordinates"]));
         }
     }
     return areas;

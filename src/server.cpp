@@ -110,6 +110,7 @@ int Server::main(const std::vector<std::string>& args) {
     Poco::Net::HTTPServer server(factory, socket, parameters);
 
     server.start();
+    std::cout << "Server started" << std::endl;
     waitForTerminationRequest();
     server.stop();
 

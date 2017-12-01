@@ -10,7 +10,7 @@ void AddAreaHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::
     Json json;
     try {
         json = Json::parse(readAll(request.stream()));
-        if (json.find("latitude") == json.end() || json.find("longitude") == json.end() || json.find("radius") == json.end()) {
+        if (json.find("name") == json.end() || json.find("coordinates") == json.end()) {
             sendBadRequest(response);
             return;
         }
@@ -19,21 +19,28 @@ void AddAreaHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::
         return;
     }
 
+    std::string name = json["name"];
+    std::vector<Coordinate> coordinates = json["coordinates"];
+
     auto client = pool.acquire();
     auto users = usersCollection(client);
 
     auto doc_filter = document()
             << "_id" << bsoncxx::oid(user.id)
             << finalize;
+
+    bsoncxx::builder::basic::array array_builder;
+    for (const auto& c : coordinates)
+        array_builder.append(document() << "latitude" << c.latitude << "longitude" << c.longitude << finalize);
+
     auto doc_value = document()
-            << "$push" << bsoncxx::builder::stream::open_document
-            << "areas" << bsoncxx::builder::stream::open_document
+            << "$push" << open_document
+            << "areas" << open_document
             << "_id" << bsoncxx::oid()
-            << "latitude" << (double)json["latitude"]
-            << "longitude" << (double)json["longitude"]
-            << "radius" << (double)json["radius"]
-            << bsoncxx::builder::stream::close_document
-            << bsoncxx::builder::stream::close_document
+            << "name" << name
+            << "coordinates" << array_builder
+            << close_document
+            << close_document
             << finalize;
 
     auto result = users.update_one(doc_filter.view(), doc_value.view());

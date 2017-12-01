@@ -26,11 +26,11 @@ void DeleteAreaHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poc
             << "_id" << bsoncxx::oid(user.id)
             << finalize;
     auto doc_value = document()
-            << "$pull" << bsoncxx::builder::stream::open_document
-            << "areas" << bsoncxx::builder::stream::open_document
+            << "$pull" << open_document
+            << "areas" << open_document
             << "_id" << bsoncxx::oid((std::string)json["id"])
-            << bsoncxx::builder::stream::close_document
-            << bsoncxx::builder::stream::close_document
+            << close_document
+            << close_document
             << finalize;
 
     auto result = users.update_one(doc_filter.view(), doc_value.view());

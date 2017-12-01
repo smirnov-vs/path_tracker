@@ -1,14 +1,23 @@
 #include "user.hpp"
 
-Area::Area(const std::string &id, double latitude, double longitude, double radius)
-        : id(id), latitude(latitude), longitude(longitude), radius(radius) {}
+Coordinate::Coordinate(double latitude, double longitude)
+        : latitude(latitude), longitude(longitude) {}
+
+Area::Area(const std::string &id, const std::string &name, const std::vector<Coordinate> &coordinates)
+        : id(id), name(name), coordinates(coordinates) {}
+
+void to_json(nlohmann::json& j, const Coordinate& coordinate) {
+    j = {
+            {"latitude",  coordinate.latitude},
+            {"longitude", coordinate.longitude},
+    };
+}
 
 void to_json(nlohmann::json& j, const Area& area) {
     j = {
-            {"id",        area.id},
-            {"latitude",  area.latitude},
-            {"longitude", area.longitude},
-            {"radius",    area.radius},
+            {"id",          area.id},
+            {"name",        area.name},
+            {"coordinates", area.coordinates},
     };
 }
 
@@ -20,4 +29,9 @@ void to_json(nlohmann::json& j, const User& user) {
             {"out_friends", user.out_friends},
             {"areas",       user.areas},
     };
+}
+
+void from_json(const nlohmann::json& j, Coordinate& coordinate) {
+    coordinate.latitude = j["latitude"];
+    coordinate.longitude = j["longitude"];
 }

@@ -80,16 +80,21 @@ ymaps.ready(() => {
     $.getJSON("/api/session").done((data) => {
         $("#nav_email").text(data.email);
         let number = 0;
-        data.in_friends.forEach((el) => {
-            $("#dropdown2").append('<li><a>' + el + '</a></li>')
-        });
         data.out_friends.forEach((el) => {
             $("#dropdown1").append('<li id="friend' + number + '"><a><i class="material-icons" onclick="deleteFriend(' + number++ + ')">delete</i><poop>' + el + '</poop></a></li>')
+        });
+        data.in_friends.forEach((el) => {
+            $("#dropdown2").append('<li><a>' + el + '</a></li>')
         });
 
         const areas = new ymaps.GeoObjectCollection();
         data.areas.forEach((el) => {
-            areas.add(new ymaps.Circle([[el.latitude, el.longitude], el.radius], {}, { fillColor: "00FF0077" }));
+            $("#dropdown3").append('<li data-id="' + el.id + '"><a>' + el.name + '</a></li>')
+            const coords = [];
+            el.coordinates.forEach((c) => {
+                coords.push([c.latitude, c.longitude]);
+            });
+            areas.add(new ymaps.Polygon([coords], {hintContent: el.name}, {fillColor: "#00FF0077",}));
         });
         map.geoObjects.add(areas);
     }).fail(() => {
@@ -184,6 +189,72 @@ function deleteFriend(number) {
         },
         data: JSON.stringify({
             email: email
+        })
+    });
+}
+
+function addArea() {
+    const area = new ymaps.Polygon([], {}, {
+        editorDrawingCursor: "crosshair",
+        fillColor: '#00FF0077',
+        strokeColor: '#0000FF',
+        strokeWidth: 5,
+    });
+    map.geoObjects.add(area);
+
+    map.geoObjects.events.add('editorstatechange', (e) => {
+        const state = area.editor.state;
+        if (!state.get('drawing') && state.get('editing')) {
+            const coords = area.geometry._coordPath.getCoordinates()[0];
+            console.log(coords.length);
+            if (coords.length < 4) {
+                setTimeout(() => { map.geoObjects.remove(area) }, 1);
+                return;
+            }
+
+            let name = "";
+            while (name === "") {
+                name = prompt("Введите название зоны");
+            }
+            if (name != null) {
+                sendArea(name, coords, area);
+            } else {
+                setTimeout(() => { map.geoObjects.remove(area) }, 1);
+            }
+        }
+    });
+
+    area.editor.startDrawing();
+}
+
+function sendArea(name, coords, polygon) {
+    let coordinates = [];
+    coords.forEach((c) => {
+        coordinates.push({
+            "latitude": c[0],
+            "longitude": c[1]
+        })
+    });
+
+    $.ajax({
+        url: '/api/areas',
+        type: 'post',
+        dataType: 'text',
+        xhrFields: {
+            withCredentials: true
+        },
+
+        success: () => {
+            map.geoObjects.remove(polygon);
+            map.geoObjects.add(polygon);
+        },
+        error: () => {
+            map.geoObjects.remove(polygon);
+            alert('Error :(');
+        },
+        data: JSON.stringify({
+            name: name,
+            coordinates: coordinates
         })
     });
 }

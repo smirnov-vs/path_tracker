@@ -27,9 +27,9 @@ void AddFriendHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco
                 << "email" << email
                 << finalize;
         auto doc_value = document()
-                << "$addToSet" << bsoncxx::builder::stream::open_document
+                << "$addToSet" << open_document
                 << "in_friends" << user.email
-                << bsoncxx::builder::stream::close_document
+                << close_document
                 << finalize;
 
         auto result = users.update_one(doc_filter.view(), doc_value.view());
@@ -45,9 +45,9 @@ void AddFriendHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco
                 << finalize;
 
         auto doc_value = document()
-                << "$addToSet" << bsoncxx::builder::stream::open_document
+                << "$addToSet" << open_document
                 << "out_friends" << email
-                << bsoncxx::builder::stream::close_document
+                << close_document
                 << finalize;
 
 

@@ -7,6 +7,8 @@
 using namespace clickhouse;
 using Json = nlohmann::json;
 
+using namespace bsoncxx::builder::stream;
+
 static constexpr std::time_t SECONDS_IN_DAY = 24*60*60;
 thread_local Client TrackHandler::client(ClientOptions().SetHost("localhost"));
 
@@ -39,16 +41,43 @@ inline auto findKey(const std::vector<auto>& vector, const std::string& value) {
 void TrackHandler::handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response, const User& user) {
     Poco::URI uri(request.getURI());
     const auto params = uri.getQueryParameters();
-    const auto it = findKey(params, "time");
+    auto it = findKey(params, "time");
     if (it == params.end() || !is_number(it->second)) {
         sendBadRequest(response);
         return;
     }
     std::time_t time = std::stol(it->second, nullptr, 10);
 
+    it = findKey(params, "who");
+    if (it == params.end()) {
+        sendBadRequest(response);
+        return;
+    }
+    auto who = it->second;
+    std::string id;
+    if (who != "me") {
+        if (auto it = std::find(user.in_friends.begin(), user.in_friends.end(), who); it == user.in_friends.end()) {
+            sendBadRequest(response);
+            return;
+        }
+
+        auto client = pool.acquire();
+        auto users = usersCollection(client);
+        auto result = users.find_one(document() << "email" << who << finalize);
+        if (!result) {
+            sendBadRequest(response);
+            return;
+        }
+
+        auto view = result->view();
+        id = view["_id"].get_oid().value.to_string();
+    } else {
+        id = user.id;
+    }
+
     const auto query = format("SELECT toString(time, 'Europe/Moscow'), latitude, longitude, accuracy, speed FROM tracking.logs "
                                       "WHERE id = '{}' AND time BETWEEN '{}' AND '{}' ORDER BY time",
-                              user.id, today(time), tomorrow(time));
+                              id, today(time), tomorrow(time));
     auto array = Json::array();
     client.Select(query,
                   [&](const Block &block) {

@@ -37,9 +37,9 @@ void SigninHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::N
                     << "email" << email
                     << finalize;
             auto doc_value = document()
-                    << "$set" << bsoncxx::builder::stream::open_document
+                    << "$set" << open_document
                     << "gcm_token" << gcm_token
-                    << bsoncxx::builder::stream::close_document
+                    << close_document
                     << finalize;
 
             auto result = users.update_one(doc_filter.view(), doc_value.view());
