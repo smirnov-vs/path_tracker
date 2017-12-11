@@ -2,6 +2,7 @@ let map;
 let currentTrackDate;
 let newTrackDate;
 let currentTrackUser = 'me';
+let areas;
 
 function getTrack() {
     const time = Math.floor(currentTrackDate / 1000);
@@ -30,6 +31,7 @@ function getTrack() {
             map.geoObjects.add(polyline);
             map.setBounds(polyline.geometry.getBounds());
         }
+        map.geoObjects.add(areas);
     }).fail(() => {
         Materialize.toast('Произошла ошибка при загрузке данных', 10000, 'rounded');
     });
@@ -89,7 +91,7 @@ ymaps.ready(() => {
             $("#dropdown2").append('<li><a onclick="changeTrackUser(\'' + el + '\')">' + el + '</a></li>')
         });
 
-        const areas = new ymaps.GeoObjectCollection();
+        areas = new ymaps.GeoObjectCollection();
         data.areas.forEach((el) => {
             $("#dropdown3").append('<li data-id="' + el.id + '"><a>' + el.name + '</a></li>')
             const coords = [];
@@ -98,12 +100,11 @@ ymaps.ready(() => {
             });
             areas.add(new ymaps.Polygon([coords], {hintContent: el.name}, {fillColor: "#00FF0077",}));
         });
-        map.geoObjects.add(areas);
+
+        getTrack();
     }).fail(() => {
         window.location.replace('login');
     });
-
-    getTrack();
 });
 
 function login(signup = false) {
