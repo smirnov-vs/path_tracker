@@ -25,7 +25,7 @@ function getTrack() {
         });
 
         if (points.length > 0) {
-            const polyline = new ymaps.Polyline(points);
+            const polyline = new ymaps.Polyline(points, {}, {strokeColor: '#00FF00', strokeWidth: 4});
             map.geoObjects.add(trackCollection);
             map.geoObjects.add(polyline);
             map.setBounds(polyline.geometry.getBounds());
