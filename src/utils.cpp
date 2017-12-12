@@ -83,10 +83,12 @@ bool isIntersects(const Area& area, float latitude, float longitude, float accur
 
 void sendPush(const std::string& userName, const std::string& areaName, const std::string& token) {
     nlohmann::json pushMessage = {
-            "data", {
-                    "message", format("User <{}> just have left area <{}>", userName, areaName)
+            {
+                "data", {
+                    {"message", format("User <{}> just have left area <{}>", userName, areaName)},
+                },
             },
-            "to", token,
+            { "to", token },
     };
 
     CURL *curl;
