@@ -59,6 +59,7 @@ void AuthHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Net
         auto view = result->view();
         User user{view["_id"].get_oid().value.to_string(),
                   view["email"].get_utf8().value.to_string(),
+                  view["gcm_token"].get_utf8().value.to_string(),
                   convertFriends(view["in_friends"]),
                   convertFriends(view["out_friends"]),
                   convertAreas(view["areas"])};

@@ -25,4 +25,4 @@ add_executable(${PROJECT_NAME} ${SRC})
 
 target_link_libraries(${PROJECT_NAME} ${POCO_LIBS}
         clickhouse-cpp-lib cityhash-lib lz4-lib
-        mongocxx bsoncxx crypto)
+        mongocxx bsoncxx crypto curl)

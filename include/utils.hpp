@@ -8,6 +8,8 @@
 
 #include <Poco/Net/HTTPServerResponse.h>
 
+#include "user.hpp"
+
 std::string readAll(std::istream& stream);
 
 mongocxx::collection usersCollection(mongocxx::pool::entry& client);
@@ -17,5 +19,9 @@ void sendUnauthorized(Poco::Net::HTTPServerResponse& response);
 
 std::string generateToken();
 std::string sha256(const std::string& value);
+
+bool isIntersects(const Area& area, float latitude, float longitude, float accuracy);
+
+void sendPush(const std::string& userName, const std::string& areaName, const std::string& token);
 
 #endif //PATH_TRACKING_UTILS_HPP

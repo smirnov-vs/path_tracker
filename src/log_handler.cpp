@@ -1,15 +1,15 @@
 #include "log_handler.hpp"
 #include "utils.hpp"
 
-Log::Log(const std::string& json, const std::string& userId, time_t time)
-        : json(json), userId(userId), time(time) {}
+Log::Log(const std::string& json, const User& user, std::time_t time)
+        : json(json), user(user), time(time) {}
 
 void LogHandler::handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response, const User& user) {
     auto json = readAll(request.stream());
     const auto now = time(nullptr);
     {
         std::lock_guard lock(logsMutex);
-        logs.emplace_back(std::move(json), user.id, now);
+        logs.emplace_back(std::move(json), user, now);
     }
 
     response.send();

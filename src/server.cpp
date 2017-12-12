@@ -9,10 +9,12 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
 
+#include <curl/curl.h>
+
 using namespace clickhouse;
 using namespace std::chrono_literals;
-using Json = nlohmann::json;
 using namespace bsoncxx::builder::stream;
+using Json = nlohmann::json;
 
 void Server::logWorker(Client& client) {
     std::mutex timerMutex;
@@ -39,24 +41,34 @@ void Server::logWorker(Client& client) {
         auto speedColumn = std::make_shared<ColumnFloat64>();
 
         for (const auto& log : localLogs) {
+            float latitude, longitude, accuracy;
+
             try {
                 const auto json = Json::parse(log.json);
-                const float latitude = json["latitude"];
-                const float longitude = json["longitude"];
-                const float accuracy = json["accuracy"];
+                latitude = json["latitude"];
+                longitude = json["longitude"];
+                accuracy = json["accuracy"];
                 const float speed = json["speed"];
 
-                time_t pendingTime = 0;
+                std::time_t pendingTime = 0;
                 if (auto it = json.find("time"); it != json.end())
-                    pendingTime = (time_t)*it;
+                    pendingTime = (std::time_t)*it;
 
-                idColumn->Append(log.userId);
+                idColumn->Append(log.user.id);
                 timeColumn->Append(pendingTime == 0 ? log.time : pendingTime);
                 latitudeColumn->Append(latitude);
                 longitudeColumn->Append(longitude);
                 accuracyColumn->Append(accuracy);
                 speedColumn->Append(speed);
-            } catch (std::exception&) {}
+            } catch (std::exception&) {
+                continue;
+            }
+
+            for (const auto& area : log.user.areas) {
+                if (!isIntersects(area, latitude, longitude, accuracy)) {
+                    sendPush(log.user.email, area.name, log.user.gcm_token);
+                }
+            }
         }
 
         block.AppendColumn("id", idColumn);
@@ -72,6 +84,8 @@ void Server::logWorker(Client& client) {
 }
 
 int Server::main(const std::vector<std::string>& args) {
+    curl_global_init(CURL_GLOBAL_ALL);
+
     Client clickhouse(ClientOptions().SetHost("localhost"));
 
     mongocxx::instance instance;
@@ -118,6 +132,7 @@ int Server::main(const std::vector<std::string>& args) {
     workerCv.notify_one();
     worker.join();
 
+    curl_global_cleanup();
     return 0;
 }
 

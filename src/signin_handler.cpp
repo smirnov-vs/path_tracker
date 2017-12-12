@@ -30,23 +30,24 @@ void SigninHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::N
     if (result) {
         auto view = result->view();
 
+        std::string gcm_token;
         if (auto it = json.find("gcm_token"); it != json.end()) {
-            std::string gcm_token = *it;
+            gcm_token = (std::string)*it;
+        }
 
-            auto doc_filter = document()
-                    << "email" << email
-                    << finalize;
-            auto doc_value = document()
-                    << "$set" << open_document
-                    << "gcm_token" << gcm_token
-                    << close_document
-                    << finalize;
+        auto doc_filter = document()
+                << "email" << email
+                << finalize;
+        auto doc_value = document()
+                << "$set" << open_document
+                << "gcm_token" << gcm_token
+                << close_document
+                << finalize;
 
-            auto result = users.update_one(doc_filter.view(), doc_value.view());
-            if (!result || result->matched_count() == 0) {
-                sendUnauthorized(response);
-                return;
-            }
+        auto result = users.update_one(doc_filter.view(), doc_value.view());
+        if (!result || result->matched_count() == 0) {
+            sendUnauthorized(response);
+            return;
         }
 
         Poco::Net::HTTPCookie cookie("token", view["token"].get_utf8().value.to_string());

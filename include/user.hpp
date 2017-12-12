@@ -22,6 +22,7 @@ struct Area {
 struct User {
     std::string id;
     std::string email;
+    std::string gcm_token;
     std::vector<std::string> in_friends;
     std::vector<std::string> out_friends;
     std::vector<Area> areas;

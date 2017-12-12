@@ -8,10 +8,10 @@
 
 struct Log {
     std::string json;
-    std::string userId;
+    User user;
     std::time_t time;
 
-    Log(const std::string& json, const std::string& userId, time_t time);
+    Log(const std::string& json, const User& user, std::time_t time);
 };
 
 typedef std::vector<Log> Logs;
