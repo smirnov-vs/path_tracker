@@ -90,6 +90,7 @@ void sendPush(const std::string& userName, const std::string& areaName, const st
             },
             { "to", token },
     };
+    auto json = pushMessage.dump();
 
     CURL *curl;
     CURLcode res;
@@ -102,7 +103,8 @@ void sendPush(const std::string& userName, const std::string& areaName, const st
 
         curl_easy_setopt(curl, CURLOPT_URL, "https://gcm-http.googleapis.com/gcm/send");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, pushMessage.dump().c_str());
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json.c_str());
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
 
         res = curl_easy_perform(curl);
         if(res != CURLE_OK)
