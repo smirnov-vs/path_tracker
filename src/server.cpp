@@ -9,12 +9,12 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
 
-#include <curl/curl.h>
-
 using namespace clickhouse;
 using namespace std::chrono_literals;
 using namespace bsoncxx::builder::stream;
 using Json = nlohmann::json;
+
+Curl Server::curl;
 
 void Server::logWorker(Client& client) {
     std::mutex timerMutex;
@@ -66,7 +66,7 @@ void Server::logWorker(Client& client) {
 
             for (const auto& area : log.user.areas) {
                 if (!isIntersects(area, latitude, longitude, accuracy)) {
-                    sendPush(log.user.email, area.name, log.user.gcm_token);
+                    sendPush(curl, log.user.email, area.name, log.user.gcm_token);
                 }
             }
         }
@@ -84,8 +84,6 @@ void Server::logWorker(Client& client) {
 }
 
 int Server::main(const std::vector<std::string>& args) {
-    curl_global_init(CURL_GLOBAL_ALL);
-
     Client clickhouse(ClientOptions().SetHost("localhost"));
 
     mongocxx::instance instance;
@@ -132,7 +130,6 @@ int Server::main(const std::vector<std::string>& args) {
     workerCv.notify_one();
     worker.join();
 
-    curl_global_cleanup();
     return 0;
 }
 

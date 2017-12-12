@@ -9,8 +9,6 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 
-#include <curl/curl.h>
-
 std::string readAll(std::istream& stream) {
     return std::string(std::istream_iterator<char>(stream), std::istream_iterator<char>());
 }
@@ -81,36 +79,17 @@ bool isIntersects(const Area& area, float latitude, float longitude, float accur
     return boost::geometry::intersects(circle, area_polygon);
 }
 
-void sendPush(const std::string& userName, const std::string& areaName, const std::string& token) {
+void sendPush(const Curl& curl, const std::string& userName, const std::string& areaName, const std::string& token) {
     nlohmann::json pushMessage = {
             {
                 "data", {
-                    {"message", format("User <{}> just have left area <{}>", userName, areaName)},
-                },
+                                {"message", format("User <{}> just have left area <{}>", userName, areaName)},
+                        },
             },
-            { "to", token },
+            {   "to",   token},
     };
-    auto json = pushMessage.dump();
 
-    CURL *curl;
-    CURLcode res;
-
-    curl = curl_easy_init();
-    if (curl) {
-        curl_slist *headers = nullptr;
-        headers = curl_slist_append(headers, "Authorization: key=AIzaSyAfBYc0Y2_QravZwAEiS184TbL1UusAoME");
-        headers = curl_slist_append(headers, "Content-Type: application/json");
-
-        curl_easy_setopt(curl, CURLOPT_URL, "https://gcm-http.googleapis.com/gcm/send");
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json.c_str());
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
-
-        res = curl_easy_perform(curl);
-        if(res != CURLE_OK)
-            fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                    curl_easy_strerror(res));
-
-        curl_easy_cleanup(curl);
-    }
+    Curl::Headers headers = {"Authorization: key=AIzaSyAfBYc0Y2_QravZwAEiS184TbL1UusAoME",
+                             "Content-Type: application/json"};
+    curl.sendPostMessage("https://gcm-http.googleapis.com/gcm/send", pushMessage.dump(), headers);
 }

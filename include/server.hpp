@@ -13,6 +13,7 @@
 #include "delete_friend_handler.hpp"
 #include "add_area_handler.hpp"
 #include "delete_area_handler.hpp"
+#include "curl.hpp"
 
 #include <Poco/Util/ServerApplication.h>
 
@@ -20,6 +21,8 @@
 #include <condition_variable>
 
 class Server final : public Poco::Util::ServerApplication {
+
+    static Curl curl;
 
     Logs logs;
     std::mutex logsMutex;
