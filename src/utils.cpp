@@ -83,7 +83,8 @@ void sendPush(const Curl& curl, const std::string& userName, const std::string& 
     nlohmann::json pushMessage = {
             {
                 "data", {
-                                {"message", format("User <{}> just have left area <{}>", userName, areaName)},
+                                {"user", userName},
+                                {"area", areaName},
                         },
             },
             {   "to",   token},
